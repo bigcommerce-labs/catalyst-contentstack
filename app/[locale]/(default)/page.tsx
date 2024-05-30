@@ -65,7 +65,7 @@ export default async function Home({ params: { locale } }: Props) {
     <>
       <Hero />
 
-      <ContentstackPosts />
+      <ContentstackPosts locale={locale} />
 
       <div className="my-10">
         <NextIntlClientProvider locale={locale} messages={{ Product: messages.Product ?? {} }}>
