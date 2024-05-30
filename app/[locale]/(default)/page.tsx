@@ -11,6 +11,7 @@ import {
   ProductCardCarousel,
   ProductCardCarouselFragment,
 } from '~/components/product-card-carousel';
+import { ContentstackPosts } from '~/contentstack/posts';
 import { LocaleType } from '~/i18n';
 
 interface Props {
@@ -63,6 +64,8 @@ export default async function Home({ params: { locale } }: Props) {
   return (
     <>
       <Hero />
+
+      <ContentstackPosts />
 
       <div className="my-10">
         <NextIntlClientProvider locale={locale} messages={{ Product: messages.Product ?? {} }}>
