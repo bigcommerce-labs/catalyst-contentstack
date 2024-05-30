@@ -2,52 +2,103 @@
 const { generateSchema, generateOutput } = require('@gql.tada/cli-utils');
 const { join } = require('path');
 
-const graphqlApiDomain = process.env.BIGCOMMERCE_GRAPHQL_API_DOMAIN ?? 'mybigcommerce.com';
+const getBigcommerceGraphqlApiDomain = () => {
+  return process.env.BIGCOMMERCE_GRAPHQL_API_DOMAIN ?? 'mybigcommerce.com';
+};
 
-const getStoreHash = () => {
-  const storeHash = process.env.BIGCOMMERCE_STORE_HASH;
+const getBigcommerceStoreHash = () => {
+  const bigcommerceStoreHash = process.env.BIGCOMMERCE_STORE_HASH;
 
-  if (!storeHash) {
-    throw new Error('Missing store hash');
+  if (!bigcommerceStoreHash) {
+    throw new Error('BIGCOMMERCE_STORE_HASH environment variable is required');
   }
 
-  return storeHash;
+  return bigcommerceStoreHash;
 };
 
-const getChannelId = () => {
-  const channelId = process.env.BIGCOMMERCE_CHANNEL_ID;
-
-  return channelId;
+const getBigcommerceChannelId = () => {
+  return process.env.BIGCOMMERCE_CHANNEL_ID;
 };
 
-const getToken = () => {
-  const token = process.env.BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN;
+const getBigcommerceCustomerImpersonationToken = () => {
+  const bigcommerceCustomerImpersonationToken =
+    process.env.BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN;
 
-  if (!token) {
-    throw new Error('Missing customer impersonation token');
+  if (!bigcommerceCustomerImpersonationToken) {
+    throw new Error('BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN environment variable is required');
   }
 
-  return token;
+  return bigcommerceCustomerImpersonationToken;
 };
 
-const getEndpoint = () => {
-  const storeHash = getStoreHash();
-  const channelId = getChannelId();
+const getContentstackApiKey = () => {
+  const contentstackApiKey = process.env.CONTENTSTACK_API_KEY;
+
+  if (!contentstackApiKey) {
+    throw new Error('CONTENTSTACK_API_KEY environment variable is required');
+  }
+
+  return contentstackApiKey;
+};
+
+const getContentstackDeliveryToken = () => {
+  const contentstackDeliveryToken = process.env.CONTENTSTACK_DELIVERY_TOKEN;
+
+  if (!contentstackDeliveryToken) {
+    throw new Error('CONTENTSTACK_DELIVERY_TOKEN environment variable is required');
+  }
+
+  return contentstackDeliveryToken;
+};
+
+const getContentstackEnvironment = () => {
+  const contentstackEnvironment = process.env.CONTENTSTACK_ENVIRONMENT;
+
+  if (!contentstackEnvironment) {
+    throw new Error('CONTENTSTACK_ENVIRONMENT environment variable is required');
+  }
+
+  return contentstackEnvironment;
+};
+
+const getBigcommerceGraphqlEndpoint = () => {
+  const bigcommerceGraphqlApiDomain = getBigcommerceGraphqlApiDomain();
+  const bigcommerceStoreHash = getBigcommerceStoreHash();
+  const bigcommerceChannelId = getBigcommerceChannelId();
 
   // Not all sites have the channel-specific canonical URL backfilled.
   // Wait till MSF-2643 is resolved before removing and simplifying the endpoint logic.
-  if (!channelId || channelId === '1') {
-    return `https://store-${storeHash}.${graphqlApiDomain}/graphql`;
+  if (!bigcommerceChannelId || bigcommerceChannelId === '1') {
+    return `https://store-${bigcommerceStoreHash}.${bigcommerceGraphqlApiDomain}/graphql`;
   }
 
-  return `https://store-${storeHash}-${channelId}.${graphqlApiDomain}/graphql`;
+  return `https://store-${bigcommerceStoreHash}-${bigcommerceChannelId}.${bigcommerceGraphqlApiDomain}/graphql`;
+};
+
+const getContentstackGraphqlEndpoint = () => {
+  const contentstackApiKey = getContentstackApiKey();
+  const contentstackEnvironment = getContentstackEnvironment();
+
+  return `https://graphql.contentstack.com/stacks/${contentstackApiKey}?environment=${contentstackEnvironment}`;
 };
 
 const generate = async () => {
+  const bigcommerceGraphqlEndpoint = getBigcommerceGraphqlEndpoint();
+  const contentstackGraphqlEndpoint = getContentstackGraphqlEndpoint();
+  const bigcommerceCustomerImpersonationToken = getBigcommerceCustomerImpersonationToken();
+  const contentstackDeliveryToken = getContentstackDeliveryToken();
+
   await generateSchema({
-    input: getEndpoint(),
-    headers: { Authorization: `Bearer ${getToken()}` },
+    input: bigcommerceGraphqlEndpoint,
+    headers: { Authorization: `Bearer ${bigcommerceCustomerImpersonationToken}` },
     output: join(__dirname, '../bigcommerce.graphql'),
+    tsconfig: undefined,
+  });
+
+  await generateSchema({
+    input: contentstackGraphqlEndpoint,
+    headers: { access_token: contentstackDeliveryToken },
+    output: join(__dirname, '../contentstack.graphql'),
     tsconfig: undefined,
   });
 
@@ -58,4 +109,8 @@ const generate = async () => {
   });
 };
 
-generate();
+generate().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error(error.message);
+  process.exit(1);
+});

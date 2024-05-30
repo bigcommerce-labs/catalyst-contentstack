@@ -36,6 +36,11 @@
             "name": "bigcommerce",
             "schema": "./bigcommerce.graphql",
             "tadaOutputLocation": "./bigcommerce-graphql.d.ts"
+          },
+          {
+            "name": "contentstack",
+            "schema": "./contentstack.graphql",
+            "tadaOutputLocation": "./contentstack-graphql.d.ts"
           }
         ]
       }
