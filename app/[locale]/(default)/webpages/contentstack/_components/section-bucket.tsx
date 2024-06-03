@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Link } from '~/components/link';
+import { Button } from '~/components/ui/button';
 import { CallToAction, ImageConnection } from '~/contentstack/types';
 import { ContentstackImageComponent } from '~/contentstack/utils';
 
@@ -19,12 +20,10 @@ export interface BucketProps {
 
 export default function SectionBucket({ section }: { section: BucketProps }) {
   return (
-    <div className="m-auto p-8 leading-5">
+    <div className="m-auto p-16 leading-5">
       <div className="text-center">
         {section.title_h2 ? (
-          <h2 className="mb-2 mt-0 text-3xl font-bold leading-8 tracking-normal sm:text-xl sm:leading-7 md:text-xl md:font-bold md:leading-6 md:tracking-normal xl:text-3xl">
-            {section.title_h2}
-          </h2>
+          <h2 className="mb-2 mt-0 text-3xl font-black lg:text-4xl">{section.title_h2}</h2>
         ) : (
           ''
         )}
@@ -43,16 +42,23 @@ export default function SectionBucket({ section }: { section: BucketProps }) {
                 </div>
 
                 <div>
-                  {bucket.title_h3 ? <h3 className="text-xl font-bold">{bucket.title_h3}</h3> : ''}
+                  {bucket.title_h3 ? (
+                    <h3 className="mb-2 text-xl font-bold">{bucket.title_h3}</h3>
+                  ) : (
+                    ''
+                  )}
                   {typeof bucket.description === 'string' && (
-                    <div dangerouslySetInnerHTML={{ __html: bucket.description }} />
+                    <div
+                      className="mb-2"
+                      dangerouslySetInnerHTML={{ __html: bucket.description }}
+                    />
                   )}
                   {bucket.call_to_action.title ? (
                     <Link
                       href={bucket.call_to_action.href ? bucket.call_to_action.href : '#'}
                       legacyBehavior
                     >
-                      {`${bucket.call_to_action.title} -->`}
+                      <Button variant="subtle">{`${bucket.call_to_action.title} -->`}</Button>
                     </Link>
                   ) : (
                     ''
