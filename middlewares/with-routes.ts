@@ -259,7 +259,9 @@ export const withRoutes: MiddlewareFactory = () => {
           break;
         }
 
-        url = `/${locale}${cleanPathName}`;
+        // url = `/${locale}${cleanPathName}`;
+        url = `/${locale}/webpages/contentstack${cleanPathName}`;
+        // ^ There should be a way to do this without editing the middleware file
       }
     }
 
