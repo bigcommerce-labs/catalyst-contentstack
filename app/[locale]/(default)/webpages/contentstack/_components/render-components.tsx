@@ -1,4 +1,6 @@
 /* eslint-disable */
+
+import { removeEdgesAndNodes } from '@bigcommerce/catalyst-client';
 import React from 'react';
 
 import AboutSectionBucket from './about-section-bucket';
@@ -8,6 +10,17 @@ import Section from './section';
 import SectionBucket from './section-bucket';
 import SectionWithHtmlCode from './section-with-html-code';
 import TeamSection from './team-section';
+
+
+import { getSessionCustomerId } from '~/auth';
+import { client } from '~/client';
+import { graphql } from '~/client/graphql';
+import { revalidate } from '~/client/revalidate-target';
+
+import {
+  ProductCardCarousel,
+  ProductCardCarouselFragment,
+} from '~/components/product-card-carousel';
 
 // import { ContentstackWebpageComponentsFragment } from '../[id]/page';
 
@@ -24,12 +37,56 @@ interface RenderProps {
   // pageComponents: PageComponents <-- todo: should work but doesn't
 }
 
-export default function RenderComponents(props: RenderProps) {
+export default async function RenderComponents(props: RenderProps) {
+  const customerId = await getSessionCustomerId();
   const { pageComponents, entryUid, contentTypeUid, locale } = props;
 
   return (
     <div data-contenttype={contentTypeUid} data-locale={locale} data-pageref={entryUid}>
-      {pageComponents.map((component, key) => {
+      {pageComponents.map(async (component, key) => {
+        if (component.products_carousel) {
+
+          const HomePageQuery = graphql(
+            `
+              query HomePageQuery {
+                site {
+                  newestProducts(first: 12) {
+                    edges {
+                      node {
+                        ...ProductCardCarouselFragment
+                      }
+                    }
+                  }
+                  featuredProducts(first: 12) {
+                    edges {
+                      node {
+                        ...ProductCardCarouselFragment
+                      }
+                    }
+                  }
+                }
+              }
+            `,
+            [ProductCardCarouselFragment],
+          );
+
+          const { data } = await client.fetch({
+            document: HomePageQuery,
+            customerId,
+            fetchOptions: customerId ? { cache: 'no-store' } : { next: { revalidate } },
+          });
+        
+          const featuredProducts = removeEdgesAndNodes(data.site.featuredProducts);
+          const newestProducts = removeEdgesAndNodes(data.site.newestProducts);
+
+          return <ProductCardCarousel
+            products={featuredProducts}
+            showCart={false}
+            showCompare={false}
+            showReviews={false}
+            title={component.products_carousel.title}
+          />
+        }
         if (component.hero_banner) {
           return (
             <HeroBanner
