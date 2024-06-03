@@ -11,7 +11,6 @@ import SectionBucket from './section-bucket';
 import SectionWithHtmlCode from './section-with-html-code';
 import TeamSection from './team-section';
 
-
 import { getSessionCustomerId } from '~/auth';
 import { client } from '~/client';
 import { graphql } from '~/client/graphql';
@@ -45,7 +44,6 @@ export default async function RenderComponents(props: RenderProps) {
     <div data-contenttype={contentTypeUid} data-locale={locale} data-pageref={entryUid}>
       {pageComponents.map(async (component, key) => {
         if (component.products_carousel) {
-
           const HomePageQuery = graphql(
             `
               query HomePageQuery {
@@ -75,17 +73,19 @@ export default async function RenderComponents(props: RenderProps) {
             customerId,
             fetchOptions: customerId ? { cache: 'no-store' } : { next: { revalidate } },
           });
-        
+
           const featuredProducts = removeEdgesAndNodes(data.site.featuredProducts);
           const newestProducts = removeEdgesAndNodes(data.site.newestProducts);
 
-          return <ProductCardCarousel
-            products={featuredProducts}
-            showCart={false}
-            showCompare={false}
-            showReviews={false}
-            title={component.products_carousel.title}
-          />
+          return (
+            <ProductCardCarousel
+              products={featuredProducts}
+              showCart={false}
+              showCompare={false}
+              showReviews={false}
+              title={component.products_carousel.title}
+            />
+          );
         }
         if (component.hero_banner) {
           return (
