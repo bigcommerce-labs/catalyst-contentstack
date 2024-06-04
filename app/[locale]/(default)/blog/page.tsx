@@ -7,15 +7,15 @@ import { BlogPostCard } from '~/components/blog-post-card';
 import { Link } from '~/components/link';
 import { LocaleType } from '~/i18n';
 
-import { getBlogPosts } from './page-data';
+import { getBlogPosts } from '~/contentstack/get-blog-data';
 
 interface Props {
   params: { locale: LocaleType };
   searchParams: Record<string, string | string[] | undefined>;
 }
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const blogPosts = await getBlogPosts(searchParams);
+export async function generateMetadata({ params: { locale }, searchParams }: Props): Promise<Metadata> {
+  const blogPosts = await getBlogPosts(searchParams, locale);
 
   const title = blogPosts?.name ?? 'Blog';
 
@@ -25,7 +25,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function BlogPostPage({ params: { locale }, searchParams }: Props) {
-  const blogPosts = await getBlogPosts(searchParams);
+  const blogPosts = await getBlogPosts(searchParams, locale);
   const t = await getTranslations({ locale, namespace: 'Pagination' });
 
   if (!blogPosts) {
@@ -37,7 +37,7 @@ export default async function BlogPostPage({ params: { locale }, searchParams }:
       <h1 className="mb-8 text-3xl font-black lg:text-5xl">{blogPosts.name}</h1>
 
       <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-        {blogPosts.posts.items.map((post) => {
+        {blogPosts.posts?.items?.map((post) => {
           return <BlogPostCard data={post} key={post.entityId} />;
         })}
       </div>

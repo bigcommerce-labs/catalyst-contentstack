@@ -259,7 +259,12 @@ export const withRoutes: MiddlewareFactory = () => {
           break;
         }
 
-        // url = `/${locale}${cleanPathName}`;
+        // Added ----------------------------------------------------------------
+        if (pathname.startsWith('/blog')) {
+          url = `/${locale}${cleanPathName}`;
+          break;
+        }
+        
         url = `/${locale}/webpages/contentstack${cleanPathName}`;
         // ^ There should be a way to do this without editing the middleware file
       }
