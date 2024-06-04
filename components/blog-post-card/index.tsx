@@ -34,7 +34,8 @@ interface Props {
   data: FragmentOf<typeof BlogPostCardFragment>;
 }
 
-export const BlogPostCard = async ({ data }: Props) => {
+
+export const BlogPostCard = async ({ data }: Props & { data: { entityId: string } }) => {
   const locale = await getLocale();
   const format = await getFormatter({ locale });
 

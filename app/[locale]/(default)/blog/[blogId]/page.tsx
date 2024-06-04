@@ -15,7 +15,7 @@ import { Tag, TagContent } from '~/components/ui/tag';
 import { LocaleType } from '~/i18n';
 
 import { SharingLinks } from './_components/sharing-links';
-import { getBlogPageData } from './page-data';
+import { getBlogPageData } from '~/contentstack/get-blog-data';
 
 interface Props {
   params: {
@@ -24,11 +24,11 @@ interface Props {
   };
 }
 
-export async function generateMetadata({ params: { blogId } }: Props): Promise<Metadata> {
-  const data = await getBlogPageData({ entityId: Number(blogId) });
-  const blogPost = data?.content.blog?.post;
+export async function generateMetadata({ params: { blogId, locale } }: Props): Promise<Metadata> {
+  const data = await getBlogPageData({ entityId: blogId }, locale);
+  const blogPost = data?.post;
 
-  const title = blogPost?.seo.pageTitle ?? 'Blog';
+  const title = blogPost?.name ?? 'Blog';
 
   return {
     title,
@@ -38,8 +38,8 @@ export async function generateMetadata({ params: { blogId } }: Props): Promise<M
 export default async function BlogPostPage({ params: { blogId, locale } }: Props) {
   const format = await getFormatter({ locale });
 
-  const data = await getBlogPageData({ entityId: Number(blogId) });
-  const blogPost = data?.content.blog?.post;
+  const data = await getBlogPageData({ entityId: blogId }, locale);
+  const blogPost = data?.post;
 
   if (!blogPost) {
     return notFound();
@@ -79,8 +79,8 @@ export default async function BlogPostPage({ params: { blogId, locale } }: Props
         </BlogPostBanner>
       )}
 
-      <div className="mb-10 text-base" dangerouslySetInnerHTML={{ __html: blogPost.htmlBody }} />
-      <div className="mb-10 flex">
+      <div className="mb-10 space-y-4 text-base" dangerouslySetInnerHTML={{ __html: blogPost.htmlBody }} />
+      {/* <div className="mb-10 flex">
         {blogPost.tags.map((tag) => (
           <Link className="me-3 block cursor-pointer" href={`/blog/tag/${tag}`} key={tag}>
             <Tag>
@@ -88,8 +88,8 @@ export default async function BlogPostPage({ params: { blogId, locale } }: Props
             </Tag>
           </Link>
         ))}
-      </div>
-      <SharingLinks data={data} />
+      </div> */}
+      {/* <SharingLinks data={data} /> */}
     </div>
   );
 }

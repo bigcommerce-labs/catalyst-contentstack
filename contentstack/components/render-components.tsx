@@ -127,7 +127,7 @@ export default async function RenderComponents(props: RenderProps) {
       })}
 
       {/* For debugging page component response (remove later) */}
-      {/* <textarea>{JSON.stringify(pageComponents)}</textarea> */}
+      <textarea>{JSON.stringify(pageComponents)}</textarea>
     </div>
   );
 }
