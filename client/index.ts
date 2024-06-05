@@ -12,3 +12,14 @@ export const client = createClient({
     (process.env.NODE_ENV !== 'production' && process.env.CLIENT_LOGGER !== 'false') ||
     process.env.CLIENT_LOGGER === 'true',
 });
+
+export const spanishClient = createClient({
+  customerImpersonationToken: process.env.SPANISH_BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN ?? '',
+  xAuthToken: process.env.SPANISH_BIGCOMMERCE_ACCESS_TOKEN ?? '',
+  storeHash: process.env.SPANISH_BIGCOMMERCE_STORE_HASH ?? '',
+  channelId: process.env.SPANISH_BIGCOMMERCE_CHANNEL_ID,
+  backendUserAgentExtensions: backendUserAgent,
+  logger:
+    (process.env.NODE_ENV !== 'production' && process.env.CLIENT_LOGGER !== 'false') ||
+    process.env.CLIENT_LOGGER === 'true',
+});

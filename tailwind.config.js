@@ -46,12 +46,9 @@ const config = {
   },
 
   plugins: [
-    // @ts-ignore
-    /* eslint-disable global-require */
     require('tailwindcss-radix')(),
     require('tailwindcss-animate'),
     require('@tailwindcss/container-queries'),
-    /* eslint-enable global-require */
   ],
 };
 

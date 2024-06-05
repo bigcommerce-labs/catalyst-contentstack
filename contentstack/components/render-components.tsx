@@ -12,7 +12,7 @@ import SectionWithHtmlCode from './section-with-html-code';
 import TeamSection from './team-section';
 
 import { getSessionCustomerId } from '~/auth';
-import { client } from '~/client';
+import { client, spanishClient } from '~/client';
 import { graphql } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
 
@@ -67,6 +67,25 @@ export default async function RenderComponents(props: RenderProps) {
             `,
             [ProductCardCarouselFragment],
           );
+
+          if (locale === 'es') {
+            const { data: spanishData } = await spanishClient.fetch({
+              document: HomePageQuery,
+              fetchOptions: customerId ? { cache: 'no-store' } : { next: { revalidate } },
+            });
+
+            const featuredProducts = removeEdgesAndNodes(spanishData.site.featuredProducts);
+
+            return (
+              <ProductCardCarousel
+                products={featuredProducts}
+                showCart={false}
+                showCompare={false}
+                showReviews={false}
+                title={component.products_carousel.title}
+              />
+            );
+          }
 
           const { data } = await client.fetch({
             document: HomePageQuery,
@@ -127,7 +146,7 @@ export default async function RenderComponents(props: RenderProps) {
       })}
 
       {/* For debugging page component response (remove later) */}
-      <textarea>{JSON.stringify(pageComponents)}</textarea>
+      {/* <textarea>{JSON.stringify(pageComponents)}</textarea> */}
     </div>
   );
 }
