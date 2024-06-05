@@ -48,6 +48,7 @@ const getContentstackDeliveryToken = () => {
 export const contentstackClient = new Client({
   url: getContentstackGraphqlEndpoint(),
   exchanges: [cacheExchange, fetchExchange],
+  requestPolicy: 'cache-and-network',
   fetchOptions: () => ({
     headers: {
       access_token: getContentstackDeliveryToken(),
