@@ -1,6 +1,9 @@
 import { cache } from 'react';
 
-import { contentstackClient, contentstackGraphQL } from './client';
+import { revalidate } from '~/client/revalidate-target';
+
+import { contentstackFetch } from './client';
+import { contentstackGraphQL } from './graphql';
 
 export const ContentstackWebpageHeroBannerFragment = contentstackGraphQL(`
   fragment WebpagesPageComponentsHeroBanner on WebpagesPageComponentsHeroBanner {
@@ -325,14 +328,14 @@ export const WEBPAGES_QUERY = contentstackGraphQL(
 export const getWebpageData = cache(async (variables: { id?: string; locale: string }) => {
   const mappedLocale = variables.locale === 'en' ? 'en-us' : variables.locale;
 
-  const { data } = await contentstackClient.query(WEBPAGES_QUERY, {
-    locale: mappedLocale,
-    url: `/${variables.id ?? ''}`,
+  const { data } = await contentstackFetch({
+    document: WEBPAGES_QUERY,
+    variables: {
+      locale: mappedLocale,
+      url: `/${variables.id ?? ''}`,
+    },
+    fetchOptions: { next: { revalidate } },
   });
-
-  if (!data) {
-    return null;
-  }
 
   return data.all_webpages?.items?.[0];
 });

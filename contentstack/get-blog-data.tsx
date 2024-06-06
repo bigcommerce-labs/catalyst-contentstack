@@ -2,8 +2,10 @@ import { jsonToHtml } from '@contentstack/json-rte-serializer';
 import { cache } from 'react';
 
 import { ResultOf } from '~/client/graphql';
+import { revalidate } from '~/client/revalidate-target';
 
-import { contentstackClient, contentstackGraphQL } from './client';
+import { contentstackFetch } from './client';
+import { contentstackGraphQL } from './graphql';
 
 const PostsFragment = contentstackGraphQL(`
   fragment PostsFragment on Posts {
@@ -98,16 +100,16 @@ export const getBlogPosts = cache(
 
     const mappedLocale = locale === 'en' ? 'en-us' : locale;
 
-    const { data } = await contentstackClient.query(BlogPostsQuery, {
-      ...filterArgs,
-      locale: mappedLocale,
-      limit: 9,
-      skip,
+    const { data } = await contentstackFetch({
+      document: BlogPostsQuery,
+      variables: {
+        ...filterArgs,
+        locale: mappedLocale,
+        limit: 9,
+        skip,
+      },
+      fetchOptions: { next: { revalidate } },
     });
-
-    if (!data) {
-      return null;
-    }
 
     const blog = transformDataToBlogPosts({
       apiResponse: data,
@@ -125,22 +127,22 @@ export const getBlogPosts = cache(
   },
 );
 
-type SingleBlogPostFiltersInput = {
+interface SingleBlogPostFiltersInput {
   entityId: string;
-};
+}
 
 export const getBlogPageData = cache(
   async ({ entityId }: SingleBlogPostFiltersInput, locale?: string) => {
     const mappedLocale = !locale || locale === 'en' ? 'en-us' : locale;
 
-    const { data } = await contentstackClient.query(SingleBlogPostQuery, {
-      locale: mappedLocale,
-      slug: entityId,
+    const { data } = await contentstackFetch({
+      document: SingleBlogPostQuery,
+      variables: {
+        locale: mappedLocale,
+        slug: entityId,
+      },
+      fetchOptions: { next: { revalidate } },
     });
-
-    if (!data) {
-      return null;
-    }
 
     const blog = transformDataToBlogPosts({
       apiResponse: data,
@@ -152,12 +154,12 @@ export const getBlogPageData = cache(
   },
 );
 
-type BlogPostsTransformProps = {
+interface BlogPostsTransformProps {
   apiResponse: ResultOf<typeof BlogPostsQuery>;
   tagId?: string;
   skip?: number;
   limit?: number;
-};
+}
 
 // These functions are here primarily here to emulate the BigCommerce responses powering the BlogPost pages by default,
 // so this can drop directly into an existing Catalyst page.
@@ -172,9 +174,10 @@ function transformDataToBlogPosts({
   skip = 0,
   limit = 9,
 }: BlogPostsTransformProps) {
-  const totalNumPosts = apiResponse?.all_posts?.total || 0;
+  const totalNumPosts = apiResponse.all_posts?.total || 0;
+
   return {
-    name: 'Blog' + (tagId ? `: ${tagId}` : ''),
+    name: `Blog${tagId ? `: ${tagId}` : ''}`,
     posts: {
       pageInfo: {
         hasNextPage: totalNumPosts - (skip + limit) > 0,
@@ -185,40 +188,40 @@ function transformDataToBlogPosts({
       items: apiResponse.all_posts?.items?.map((post) => {
         return {
           author: post?.author,
-          entityId: post?.slug as string,
-          name: post?.title as string,
+          entityId: post?.slug!,
+          name: post?.title!,
           plainTextSummary: getItemSummary(post?.content?.json),
           publishedDate: { utc: post?.system?.created_at as string },
           thumbnailImage: post?.thumbnailConnection?.edges?.[0]?.node
             ? {
-                altText: post?.thumbnailConnection?.edges?.[0]?.node?.description || '',
-                url: post?.thumbnailConnection?.edges?.[0]?.node.url || '',
+                altText: post.thumbnailConnection.edges[0]?.node?.description || '',
+                url: post.thumbnailConnection.edges[0]?.node.url || '',
               }
             : null,
           htmlBody: jsonToHtml(post?.content?.json, {
             customElementTypes: {
-              'h1': (attrs, child, jsonBlock) => {
+              h1: (attrs, child, jsonBlock) => {
                 return `<h1 className="lg:text-md text-sm">${child}</h1>`;
               },
-              'h2': (attrs, child, jsonBlock) => {
+              h2: (attrs, child, jsonBlock) => {
                 return `<h2 className="text-3xl lg:text-4xl">${child}</h2>`;
               },
-              'h3': (attrs, child, jsonBlock) => {
+              h3: (attrs, child, jsonBlock) => {
                 return `<h3 className="text-2xl lg:text-3xl">${child}</h3>`;
               },
-              'h4': (attrs, child, jsonBlock) => {
+              h4: (attrs, child, jsonBlock) => {
                 return `<h4 className="text-xl lg:text-2xl">${child}</h4>`;
               },
-              'h5': (attrs, child, jsonBlock) => {
+              h5: (attrs, child, jsonBlock) => {
                 return `<h5 class="text-xl font-bold lg:text-2xl">${child}</h5>`;
               },
-              'h6': (attrs, child, jsonBlock) => {
+              h6: (attrs, child, jsonBlock) => {
                 return `<h6 className="text-md lg:text-lg">${child}</h6>`;
               },
               // 'a': (attrs, child, jsonBlock) => {
               //   return `<Link {...attrs}>{child}</Link>`
               // },
-              'code': (attrs, child, jsonBlock) => {
+              code: (attrs, child, jsonBlock) => {
                 return `<code className="bg-black p-4 text-sm text-white">${child}</code>`;
               },
             },
@@ -229,7 +232,6 @@ function transformDataToBlogPosts({
     isVisibleInNavigation: true,
   };
 }
-
 
 //         link: ({ children, url }) => <Link href={url}>{children}</Link>,
 //         list: ({ children, format }) =>
@@ -259,7 +261,7 @@ interface ContentJSON {
   children: ChildNode[];
 }
 
-function getItemSummary(contentJson: ContentJSON | unknown, summaryLength: number = 145): string {
+function getItemSummary(contentJson: ContentJSON | unknown, summaryLength = 145): string {
   function extractText(children: ChildNode[]): string[] {
     let texts: string[] = [];
 
@@ -267,6 +269,7 @@ function getItemSummary(contentJson: ContentJSON | unknown, summaryLength: numbe
       if (child.text) {
         texts.push(child.text);
       }
+
       if (child.children) {
         texts = texts.concat(extractText(child.children));
       }
