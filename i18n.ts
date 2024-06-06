@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { createLocalizedPathnamesNavigation } from 'next-intl/navigation';
 import { getRequestConfig } from 'next-intl/server';
 
 enum LocalePrefixes {
@@ -49,6 +50,13 @@ export default getRequestConfig(async (params) => {
     messages: await import(`./messages/${lang}`),
   };
 });
+
+export const { Link, getPathname, redirect, usePathname, useRouter } =
+  createLocalizedPathnamesNavigation({
+    locales,
+    pathnames: {},
+    localePrefix,
+  });
 
 export { LocalePrefixes, locales, localePrefix, defaultLocale };
 export type { LocaleType };

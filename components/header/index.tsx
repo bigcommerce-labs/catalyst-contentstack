@@ -20,6 +20,7 @@ import { StoreLogo, StoreLogoFragment } from '../store-logo';
 import { logout } from './_actions/logout';
 import { CartLink } from './cart';
 import { HeaderNav, HeaderNavFragment } from './header-nav';
+import { LocaleSwitcher } from './locale-switcher';
 
 export const HeaderFragment = graphql(
   `
@@ -59,6 +60,7 @@ export const Header = async ({ cart, data }: Props) => {
 
         <div className="flex">
           <NavigationMenuList className="h-full">
+            <LocaleSwitcher />
             {data.settings && (
               <NavigationMenuItem className="hidden sm:block">
                 <QuickSearch>
